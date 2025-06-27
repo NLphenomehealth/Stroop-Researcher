@@ -170,43 +170,48 @@
                     break;
 
                 case 'practice':
-                     htmlContent += `
-                        <h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2>
-                        <div class="text-gray-600 mb-4 max-w-xl mx-auto">${state.practice.instruction}</div>
-                        <div class="stroop-word text-8xl my-8" style="color:${state.practice.color};">${state.practice.word}</div>
-                        <div class="text-4xl font-bold h-12 my-4 ${state.practice.feedback === 'Correct!' ? 'text-green-500' : 'text-red-500'}">${state.practice.feedback || ''}</div>
-                    `;
+                     if(state.practice) {
+                        htmlContent += `
+                            <h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2>
+                            <div class="text-gray-600 mb-4 max-w-xl mx-auto">${state.practice.instruction}</div>
+                            <div class="stroop-word text-8xl my-8" style="color:${state.practice.color};">${state.practice.word}</div>
+                            <div class="text-4xl font-bold h-12 my-4 ${state.practice.feedback === 'Correct!' ? 'text-green-500' : 'text-red-500'}">${state.practice.feedback || ''}</div>
+                        `;
+                     }
                     break;
 
                 case 'colorTest':
-                    const block = state.block;
-                    htmlContent += `
-                        <div class="absolute bottom-4 left-4 font-bold py-2 px-5 rounded-full text-white text-lg shadow-lg ${block.status.class}">${block.status.text}</div>
-                        <h2 class="text-3xl font-bold text-gray-800">Color Response - Block ${block.num}</h2>
-                        <div class="text-5xl font-mono font-bold my-2 text-gray-700">${state.timer}</div>
-                        <div class="stroop-word text-9xl my-8" style="color: ${block.color};">${block.word}</div>
-                        <div class="text-4xl font-bold h-12 ${block.feedback === 'CORRECT' ? 'text-green-500' : 'text-red-500'}">${block.feedback || ''}</div>
-                        <div class="absolute bottom-4 right-4 text-red-500 text-xl font-bold">Wrong: <span>${block.wrongCount}</span></div>
-                    `;
+                    if(state.block) {
+                        htmlContent += `
+                            <div class="absolute bottom-4 left-4 font-bold py-2 px-5 rounded-full text-white text-lg shadow-lg ${state.block.status.class}">${state.block.status.text}</div>
+                            <h2 class="text-3xl font-bold text-gray-800">Color Response - Block ${state.block.num}</h2>
+                            <div class="text-5xl font-mono font-bold my-2 text-gray-700">${state.timer}</div>
+                            <div class="stroop-word text-9xl my-8" style="color: ${state.block.color};">${state.block.word}</div>
+                            <div class="text-4xl font-bold h-12 ${state.block.feedback === 'CORRECT' ? 'text-green-500' : 'text-red-500'}">${state.block.feedback || ''}</div>
+                            <div class="absolute bottom-4 right-4 text-red-500 text-xl font-bold">Wrong: <span>${state.block.wrongCount}</span></div>
+                        `;
+                    }
                     break;
                 
                 case 'blockComplete':
-                    const results = state.blockComplete;
-                    htmlContent += `
-                        <h2 class="text-4xl font-extrabold text-gray-800 mb-6">Block ${state.currentBlock-1} Complete</h2>
-                         <div class="flex flex-col sm:flex-row justify-around items-center gap-6">
-                            <div class="border-4 border-red-400 bg-red-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
-                                <p class="text-red-600 font-bold text-xl uppercase mb-2">❌ Participant's Score ❌</p>
-                                <p>Correct: <span class="font-bold text-green-600">${results.user.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.user.wrong}</span></p>
-                                <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-red-600">${results.user.accuracy}</span>%</p>
+                    if(state.blockComplete) {
+                        const results = state.blockComplete;
+                        htmlContent += `
+                            <h2 class="text-4xl font-extrabold text-gray-800 mb-6">Block ${state.currentBlock-1} Complete</h2>
+                             <div class="flex flex-col sm:flex-row justify-around items-center gap-6">
+                                <div class="border-4 border-red-400 bg-red-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
+                                    <p class="text-red-600 font-bold text-xl uppercase mb-2">❌ Participant's Score ❌</p>
+                                    <p>Correct: <span class="font-bold text-green-600">${results.user.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.user.wrong}</span></p>
+                                    <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-red-600">${results.user.accuracy}</span>%</p>
+                                </div>
+                                <div class="border-4 border-green-400 bg-green-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
+                                    <p class="text-green-600 font-bold text-xl uppercase mb-2">🏆 Competitor Score 🏆</p>
+                                    <p>Correct: <span class="font-bold text-green-600">${results.competitor.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.competitor.wrong}</span></p>
+                                    <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-green-600">${results.competitor.accuracy}</span>%</p>
+                                </div>
                             </div>
-                            <div class="border-4 border-green-400 bg-green-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
-                                <p class="text-green-600 font-bold text-xl uppercase mb-2">🏆 Competitor Score 🏆</p>
-                                <p>Correct: <span class="font-bold text-green-600">${results.competitor.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.competitor.wrong}</span></p>
-                                <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-green-600">${results.competitor.accuracy}</span>%</p>
-                            </div>
-                        </div>
-                    `;
+                        `;
+                    }
                     break;
                 
                 case 'meal':
