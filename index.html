@@ -20,7 +20,6 @@
 
     <div id="app-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl max-w-4xl w-full text-center relative transition-all duration-500">
         
-        <!-- Session Input Screen -->
         <div id="sessionInput" class="screen">
             <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Researcher Mirror</h1>
             <p class="text-gray-600 mb-6">Enter the 6-character Session ID provided by the participant.</p>
@@ -31,14 +30,11 @@
             <p id="error-message" class="text-red-500 mt-4 font-semibold"></p>
         </div>
 
-        <!-- Mirror View (all screens will be rendered here) -->
         <div id="mirror-view" class="hidden">
-            <!-- This content will be dynamically generated to mirror the participant -->
-        </div>
+            </div>
 
     </div>
 
-    <!-- Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -69,21 +65,13 @@
 
         async function signIn() {
              try {
-                // FIX: Removed logic for custom tokens which was causing 'auth/invalid-claims'.
-                // Using only anonymous sign-in is sufficient and more stable for a read-only client.
                 await signInAnonymously(auth);
             } catch (error) {
                 console.error("Authentication Error", error);
-                document.getElementById('error-message').textContent = 'Could not authenticate with the server.';
             }
         }
         
         window.connectToSession = () => {
-            if (!auth.currentUser) {
-                document.getElementById('error-message').textContent = 'Not authenticated. Please refresh and try again.';
-                return;
-            }
-
             const sessionId = document.getElementById('sessionIdField').value.trim().toUpperCase();
             const errorEl = document.getElementById('error-message');
             
@@ -91,7 +79,7 @@
                 errorEl.textContent = 'Please enter a valid 6-character Session ID.';
                 return;
             }
-            errorEl.textContent = 'Connecting...';
+            errorEl.textContent = '';
             
             if (unsubscribe) {
                 unsubscribe();
@@ -101,7 +89,6 @@
             
             unsubscribe = onSnapshot(sessionRef, (doc) => {
                 if (doc.exists()) {
-                    errorEl.textContent = '';
                     document.getElementById('sessionInput').classList.add('hidden');
                     const mirrorView = document.getElementById('mirror-view');
                     mirrorView.classList.remove('hidden');
@@ -115,17 +102,12 @@
                 }
             }, (error) => {
                 console.error("Snapshot error:", error);
-                errorEl.textContent = "Error connecting to the session. (Permissions Error)";
+                errorEl.textContent = "Error connecting to the session.";
             });
         }
         
-        // The master rendering function
         function renderState(state) {
             const mirrorView = document.getElementById('mirror-view');
-            if (!state || !state.sessionId) {
-                mirrorView.innerHTML = '<p>Waiting for data...</p>';
-                return;
-            }
             let htmlContent = `<div class="absolute top-4 left-4 bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg">Mirroring Session: <span class="font-bold">${state.sessionId}</span></div>`;
 
             switch(state.screenId) {
@@ -153,55 +135,43 @@
                     break;
 
                 case 'practice':
-                     if (state.practice) {
-                        htmlContent += `
-                            <h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2>
-                            <div class="text-gray-600 mb-4 max-w-xl mx-auto">${state.practice.instruction}</div>
-                            <div class="stroop-word text-8xl my-8" style="color:${state.practice.color || '#000'};">${state.practice.word}</div>
-                            <div class="text-4xl font-bold h-12 my-4 ${state.practice.feedback === 'Correct!' ? 'text-green-500' : 'text-red-500'}">${state.practice.feedback || ''}</div>
-                        `;
-                     } else {
-                        htmlContent += '<p>Waiting for practice data...</p>';
-                     }
+                     htmlContent += `
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2>
+                        <div class="text-gray-600 mb-4 max-w-xl mx-auto">${state.practice.instruction}</div>
+                        <div class="stroop-word text-8xl my-8" style="color:${state.practice.color};">${state.practice.word}</div>
+                        <div class="text-4xl font-bold h-12 my-4 ${state.practice.feedback === 'Correct!' ? 'text-green-500' : 'text-red-500'}">${state.practice.feedback || ''}</div>
+                    `;
                     break;
 
                 case 'colorTest':
-                    if (state.block && state.block.status) {
-                        const block = state.block;
-                        htmlContent += `
-                            <div class="absolute bottom-4 left-4 font-bold py-2 px-5 rounded-full text-white text-lg shadow-lg ${block.status.class}">${block.status.text}</div>
-                            <h2 class="text-3xl font-bold text-gray-800">Color Response - Block ${block.num}</h2>
-                            <div class="text-5xl font-mono font-bold my-2 text-gray-700">${state.timer}</div>
-                            <div class="stroop-word text-9xl my-8" style="color: ${block.color};">${block.word}</div>
-                            <div class="text-4xl font-bold h-12 ${block.feedback === 'CORRECT' ? 'text-green-500' : 'text-red-500'}">${block.feedback || ''}</div>
-                            <div class="absolute bottom-4 right-4 text-red-500 text-xl font-bold">Wrong: <span>${block.wrongCount}</span></div>
-                        `;
-                    } else {
-                        htmlContent += '<p>Waiting for test data...</p>';
-                    }
+                    const block = state.block;
+                    htmlContent += `
+                        <div class="absolute bottom-4 left-4 font-bold py-2 px-5 rounded-full text-white text-lg shadow-lg ${block.status.class}">${block.status.text}</div>
+                        <h2 class="text-3xl font-bold text-gray-800">Color Response - Block ${block.num}</h2>
+                        <div class="text-5xl font-mono font-bold my-2 text-gray-700">${state.timer}</div>
+                        <div class="stroop-word text-9xl my-8" style="color: ${block.color};">${block.word}</div>
+                        <div class="text-4xl font-bold h-12 ${block.feedback === 'CORRECT' ? 'text-green-500' : 'text-red-500'}">${block.feedback || ''}</div>
+                        <div class="absolute bottom-4 right-4 text-red-500 text-xl font-bold">Wrong: <span>${block.wrongCount}</span></div>
+                    `;
                     break;
                 
                 case 'blockComplete':
-                    if (state.blockComplete && state.blockComplete.user) {
-                        const results = state.blockComplete;
-                        htmlContent += `
-                            <h2 class="text-4xl font-extrabold text-gray-800 mb-6">Block ${state.currentBlock-1} Complete</h2>
-                            <div class="flex flex-col sm:flex-row justify-around items-center gap-6">
-                                <div class="border-4 border-red-400 bg-red-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
-                                    <p class="text-red-600 font-bold text-xl uppercase mb-2">❌ Participant's Score ❌</p>
-                                    <p>Correct: <span class="font-bold text-green-600">${results.user.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.user.wrong}</span></p>
-                                    <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-red-600">${results.user.accuracy}</span>%</p>
-                                </div>
-                                <div class="border-4 border-green-400 bg-green-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
-                                    <p class="text-green-600 font-bold text-xl uppercase mb-2">🏆 Competitor Score 🏆</p>
-                                    <p>Correct: <span class="font-bold text-green-600">${results.competitor.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.competitor.wrong}</span></p>
-                                    <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-green-600">${results.competitor.accuracy}</span>%</p>
-                                </div>
+                    const results = state.blockComplete;
+                    htmlContent += `
+                        <h2 class="text-4xl font-extrabold text-gray-800 mb-6">Block ${state.currentBlock-1} Complete</h2>
+                         <div class="flex flex-col sm:flex-row justify-around items-center gap-6">
+                            <div class="border-4 border-red-400 bg-red-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
+                                <p class="text-red-600 font-bold text-xl uppercase mb-2">❌ Participant's Score ❌</p>
+                                <p>Correct: <span class="font-bold text-green-600">${results.user.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.user.wrong}</span></p>
+                                <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-red-600">${results.user.accuracy}</span>%</p>
                             </div>
-                        `;
-                    } else {
-                        htmlContent += '<p>Waiting for results data...</p>';
-                    }
+                            <div class="border-4 border-green-400 bg-green-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
+                                <p class="text-green-600 font-bold text-xl uppercase mb-2">🏆 Competitor Score 🏆</p>
+                                <p>Correct: <span class="font-bold text-green-600">${results.competitor.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.competitor.wrong}</span></p>
+                                <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-green-600">${results.competitor.accuracy}</span>%</p>
+                            </div>
+                        </div>
+                    `;
                     break;
                 
                 case 'meal':
