@@ -16,40 +16,50 @@
         }
     </style>
 </head>
-<body class="bg-gray-800 flex items-center justify-center min-h-screen">
+<body class="bg-gray-800 flex items-center justify-center min-h-screen p-4">
 
-    <div id="app-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl max-w-4xl w-full text-center relative transition-all duration-500">
-        
-        <div id="sessionInput" class="screen">
-            <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Researcher Mirror</h1>
-            <p class="text-gray-600 mb-6">Enter the 6-character Session ID provided by the participant.</p>
-            <div class="flex justify-center items-center gap-4">
-                <input type="text" id="sessionIdField" maxlength="6" class="form-input text-center text-2xl font-mono uppercase w-48 px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                <button id="connectBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg shadow-lg transform hover:scale-105 transition-transform" onclick="connectToSession()">Connect</button>
+    <!-- This container will be replaced by an error message if needed -->
+    <div id="main-content" class="w-full">
+        <div id="app-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl max-w-4xl w-full text-center relative transition-all duration-500 mx-auto">
+            
+            <!-- Session Input Screen -->
+            <div id="sessionInput" class="screen">
+                <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Researcher Mirror</h1>
+                <p class="text-gray-600 mb-6">Enter the 6-character Session ID provided by the participant.</p>
+                <div class="flex justify-center items-center gap-4">
+                    <input type="text" id="sessionIdField" maxlength="6" class="form-input text-center text-2xl font-mono uppercase w-48 px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    <button id="connectBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg shadow-lg transform hover:scale-105 transition-transform" onclick="connectToSession()">Connect</button>
+                </div>
+                <p id="error-message" class="text-red-500 mt-4 font-semibold"></p>
             </div>
-            <p id="error-message" class="text-red-500 mt-4 font-semibold"></p>
+
+            <!-- Mirror View (all screens will be rendered here) -->
+            <div id="mirror-view" class="hidden">
+                <!-- This content will be dynamically generated to mirror the participant -->
+            </div>
+
         </div>
-
-        <div id="mirror-view" class="hidden">
-            </div>
-
     </div>
 
+    <!-- Firebase -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
         
         let db, auth;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         let unsubscribe = null; // To store the listener cleanup function
 
         window.onload = function() {
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-            if (!firebaseConfig) {
-                document.body.innerHTML = '<h1>Error: Firebase configuration not found.</h1>';
-                return;
-            }
+            // Your web app's Firebase configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyAY-vUFdaTXQR9-B9tPFeQNgUd2CHdEBJ8",
+                authDomain: "stroop-comp.firebaseapp.com",
+                projectId: "stroop-comp",
+                storageBucket: "stroop-comp.firebasestorage.app",
+                messagingSenderId: "832246150640",
+                appId: "1:832246150640:web:e35225f1dd629fa9335935"
+            };
             
             try {
                 const app = initializeApp(firebaseConfig);
@@ -59,7 +69,10 @@
                 signIn();
             } catch (e) {
                 console.error("Firebase initialization failed:", e);
-                document.body.innerHTML = '<h1>Error: Could not connect to the server.</h1>';
+                 document.getElementById('main-content').innerHTML = `
+                    <div class="bg-white p-8 rounded-lg shadow-xl">
+                        <h1 class="text-2xl font-bold text-red-600">Error: Could not connect to the server.</h1>
+                    </div>`;
             }
         };
 
@@ -68,12 +81,34 @@
                 await signInAnonymously(auth);
             } catch (error) {
                 console.error("Authentication Error", error);
+                let errorMessage = `<h1>Authentication Failed</h1><p>${error.message}</p>`;
+
+                // Check for the specific error and provide helpful instructions.
+                if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
+                    errorMessage = `
+                        <div class="text-left max-w-3xl mx-auto bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
+                            <h1 class="text-2xl font-extrabold text-red-700 mb-4">Action Required: Enable Anonymous Sign-In</h1>
+                            <p class="text-lg text-gray-800 mb-4">This app needs permission to connect to the database. This is a one-time setup step in your Firebase project.</p>
+                            <p class="font-bold text-gray-900 mb-2">Please follow these steps to fix this:</p>
+                            <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                                <li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-blue-600 underline font-semibold">Firebase Console</a> and select your project (<strong>stroop-comp</strong>).</li>
+                                <li>In the left menu, click <strong>Build > Authentication</strong>.</li>
+                                <li>On the Authentication page, click the <strong>Sign-in method</strong> tab.</li>
+                                <li>Find <strong>Anonymous</strong> in the list of sign-in providers and click on it.</li>
+                                <li>Click the <strong>Enable</strong> toggle switch, then click <strong>Save</strong>.</li>
+                                <li>Once you've saved, come back here and <strong>refresh this page</strong>. The app will then work correctly.</li>
+                            </ol>
+                        </div>
+                    `;
+                }
+                document.getElementById('main-content').innerHTML = `<div class="p-4">${errorMessage}</div>`;
             }
         }
         
         window.connectToSession = () => {
             const sessionId = document.getElementById('sessionIdField').value.trim().toUpperCase();
             const errorEl = document.getElementById('error-message');
+            const appId = "stroop-comp"; // Hardcode project ID
             
             if (sessionId.length !== 6) {
                 errorEl.textContent = 'Please enter a valid 6-character Session ID.';
