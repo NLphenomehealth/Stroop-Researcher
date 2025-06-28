@@ -14,10 +14,14 @@
              font-weight: 900;
              letter-spacing: 0.1em;
         }
+        #progressBar-mirror {
+            transition: width 1.5s linear;
+        }
     </style>
 </head>
 <body class="bg-gray-800 flex items-center justify-center min-h-screen p-4">
 
+    <!-- This container will be replaced by an error message if needed -->
     <div id="main-content" class="w-full">
         <div id="app-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl max-w-5xl w-full text-center relative transition-all duration-500 mx-auto">
             
@@ -47,10 +51,10 @@
                 <div id="baseline-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-4">Resting Baseline</h2><p class="text-gray-600 mb-6">Participant is in the 3-minute resting period.</p><div class="text-6xl font-mono font-bold my-4 text-gray-800" id="baselineTimer-mirror">3:00</div></div></div>
                 
                 <!-- Instructions Screen Mirror -->
-                <div id="instructions-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-6">Instructions</h2><p class="text-gray-600">Participant is viewing the instructions.</p></div></div>
+                <div id="instructions-mirror" class="screen-mirror hidden"></div>
 
                 <!-- Practice Screen Mirror -->
-                <div id="practice-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2><div class="instructions text-gray-600 mb-4 mx-auto min-h-[10rem] flex items-center justify-center"><div class="p-4" id="practiceInstruction-mirror"></div></div><div id="practiceElements-mirror"><div class="stroop-word text-6xl my-4" id="practiceWord-mirror"></div><div class="text-2xl font-bold h-10 my-4" id="practiceFeedback-mirror"></div></div><div id="practiceStatus-mirror"></div></div></div>
+                <div id="practice-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2><div class="instructions text-gray-600 mb-4 mx-auto min-h-[10rem] flex items-center justify-center p-4"><div id="practiceInstruction-mirror"></div></div><div id="practiceElements-mirror"><div class="stroop-word text-6xl my-4" id="practiceWord-mirror"></div><div class="text-2xl font-bold h-10 my-4" id="practiceFeedback-mirror"></div></div><div id="practiceStatus-mirror"></div></div></div>
 
                 <!-- Color Test Screen Mirror -->
                 <div id="colorTest-mirror" class="screen-mirror hidden">
@@ -58,9 +62,7 @@
                         <h2 id="blockTitle-mirror" class="text-3xl font-bold text-gray-800"></h2>
                         <div id="colorTimer-mirror" class="text-5xl font-mono font-bold my-2 text-gray-700"></div>
                         <div id="colorWord-mirror" class="stroop-word text-7xl my-8"></div>
-                        <div class="w-full max-w-md mx-auto bg-gray-200 rounded-full h-4 mt-2 mb-6">
-                            <div id="progressBar-mirror" class="bg-indigo-600 h-4 rounded-full"></div>
-                        </div>
+                        <div class="w-full max-w-md mx-auto bg-gray-200 rounded-full h-4 mt-2 mb-6"><div id="progressBar-mirror" class="bg-indigo-600 h-4 rounded-full"></div></div>
                         <div class="flex justify-center space-x-2 sm:space-x-4 my-6 opacity-50"><button class="response-button" style="border-color: red; color: red;">R</button><button class="response-button" style="border-color: green; color: green;">G</button><button class="response-button" style="border-color: blue; color: blue;">B</button><button class="response-button" style="border-color: #FFBF00; color: #FFBF00;">Y</button></div>
                         <div id="feedback-mirror" class="text-4xl font-bold h-12"></div>
                     </div>
@@ -149,36 +151,39 @@
                 lastRenderedScreen = state.screenId;
             }
 
-            const surveyHtml = `<div class="max-w-4xl mx-auto text-left space-y-4"><h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Participant is Logging Stress Level</h2><p>Instructions shown to participant:</p><div class="bg-gray-100 p-4 rounded-lg border border-gray-300"><p>Please open the <strong>MyT1Diabetes</strong> app and open the <strong>I’ve Noticed</strong> feature.</p><p>Select ‘Write a note’, tap the text box and enter: <code class="bg-gray-200 text-red-600 p-1 rounded">Stress 0=[your response to the survey below]</code>. After you’ve entered your response, please select ‘Confirm’.</p><div class="my-4"><p class="font-bold">What is your current stress level?</p><ul class="list-none space-y-1 mt-2"><li>○ 😰 Very stressed</li><li>○ 😨 Stressed</li><li>○ 😥 Somewhat stressed</li><li>○ 😶 Neutral</li><li>○ 😌 Not stressed at all</li><li>○ ⚪️ No answer</li></ul></div></div><p class="text-center font-semibold text-indigo-600 mt-4">Waiting for participant to click "Next"...</p></div>`;
+            const surveyHtml = (stressId) => `<div class="max-w-4xl mx-auto text-left space-y-4"><h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Participant is Logging Stress Level</h2><p>Instructions shown to participant:</p><div class="bg-gray-100 p-4 rounded-lg border border-gray-300"><p>Please open the <strong>MyT1Diabetes</strong> app and open the <strong>I’ve Noticed</strong> feature.</p><p>Select ‘Write a note’, tap the text box and enter: <code class="bg-gray-200 text-red-600 p-1 rounded">Stress ${stressId}=[your response to the survey below]</code>. After you’ve entered your response, please select ‘Confirm’.</p><div class="my-4"><p class="font-bold">What is your current stress level?</p><ul class="list-none space-y-1 mt-2"><li>○ 😰 Very stressed</li><li>○ 😨 Stressed</li><li>○ 😥 Somewhat stressed</li><li>○ 😶 Neutral</li><li>○ 😌 Not stressed at all</li><li>○ ⚪️ No answer</li></ul></div></div><p class="text-center font-semibold text-indigo-600 mt-4">Waiting for participant to click "Next"...</p></div>`;
 
             switch(state.screenId) {
                 case 'preBaselineSurvey':
-                    document.getElementById('preBaselineSurvey-mirror').innerHTML = surveyHtml;
+                    document.getElementById('preBaselineSurvey-mirror').innerHTML = surveyHtml(0);
                     break;
                 case 'baseline':
                     document.getElementById('baselineTimer-mirror').textContent = state.timer || '3:00';
                     break;
+                case 'instructions':
+                     document.getElementById('instructions-mirror').innerHTML = `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-6">Color Response Instructions</h2><div class="text-left mx-auto text-gray-700 space-y-4"><p class="font-bold">Important: Respond to the <em>color</em> of the text, not the actual word.</p><p>You have two ways to respond:</p><ul class="list-disc list-inside ml-4 space-y-2"><li><strong>Use your keyboard:</strong><ul class="list-none list-inside ml-6 font-semibold"><li>Press <strong class="text-red-600">R</strong> for Red</li><li>Press <strong class="text-green-600">G</strong> for Green</li><li>Press <strong class="text-blue-600">B</strong> for Blue</li><li>Press <strong class="text-yellow-500">Y</strong> for Yellow</li></ul></li><li><strong>Click the on-screen buttons:</strong> Use your mouse to click the buttons below the word.<div class="flex justify-start space-x-2 my-2 pl-6"><div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg" style="border: 2px solid black; color: black;">R</div><div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg" style="border: 2px solid black; color: black;">G</div><div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg" style="border: 2px solid black; color: black;">B</div><div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg" style="border: 2px solid black; color: black;">Y</div></div></li></ul><p><strong>Examples:</strong></p><div class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-1"><div>If you see <span style="color:red; font-weight: bold;">GREEN</span> → Press “R” for Red.</div><div>If you see <span style="color:blue; font-weight: bold;">RED</span> → Press “B” for Blue.</div></div><p>Focus on the color of the text, not what the word says.</p></div><p class="text-center font-semibold text-indigo-600 mt-4">Waiting for participant to start practice...</p></div>`;
+                    break;
                 case 'practice':
-                    if (state.practice) {
-                        const { instruction, word, color, feedback, isComplete, isVisualExample } = state.practice;
-                        document.getElementById('practiceInstruction-mirror').innerHTML = instruction || 'Loading...';
+                     if (state.practice && state.practice.instruction) {
+                        const practice = state.practice;
+                        document.getElementById('practiceInstruction-mirror').innerHTML = practice.instruction;
                         const practiceElements = document.getElementById('practiceElements-mirror');
                         const practiceStatus = document.getElementById('practiceStatus-mirror');
-                        practiceElements.style.display = (!isComplete && !isVisualExample) ? 'block' : 'none';
-                        practiceStatus.style.display = (isComplete || isVisualExample) ? 'block' : 'none';
+                        practiceElements.style.display = (!practice.isComplete && !practice.isVisualExample) ? 'block' : 'none';
+                        practiceStatus.style.display = (practice.isComplete || practice.isVisualExample) ? 'block' : 'none';
 
-                        if (!isComplete && !isVisualExample) {
-                             document.getElementById('practiceWord-mirror').textContent = word;
-                             document.getElementById('practiceWord-mirror').style.color = color;
+                        if (!practice.isComplete && !practice.isVisualExample) {
+                             document.getElementById('practiceWord-mirror').textContent = practice.word;
+                             document.getElementById('practiceWord-mirror').style.color = practice.color;
                              const feedbackEl = document.getElementById('practiceFeedback-mirror');
-                             feedbackEl.textContent = feedback;
-                             feedbackEl.className = `text-2xl font-bold h-10 my-4 ${feedback === 'Correct' ? 'text-green-500' : 'text-red-500'}`;
-                        } else if(isComplete) {
+                             feedbackEl.textContent = practice.feedback;
+                             feedbackEl.className = `text-2xl font-bold h-10 my-4 ${practice.feedback === 'Correct' ? 'text-green-500' : 'text-red-500'}`;
+                        } else if(practice.isComplete) {
                             practiceStatus.innerHTML = `<p class="font-bold text-indigo-600">Waiting for participant to start the test...</p>`;
-                        } else if (isVisualExample) {
-                            practiceStatus.innerHTML = `<p class="font-bold text-gray-500 mt-4">Waiting for participant to click "Next"...</p>`;
+                        } else if (practice.isVisualExample) {
+                             practiceStatus.innerHTML = `<p class="font-bold text-gray-500 mt-4">Waiting for participant to click "Next"...</p>`;
                         }
-                    }
+                     }
                     break;
                 case 'colorTest':
                     if(state.block) {
@@ -212,7 +217,7 @@
                     }
                     break;
                 case 'preMealSurvey':
-                    document.getElementById('preMealSurvey-mirror').innerHTML = surveyHtml;
+                    document.getElementById('preMealSurvey-mirror').innerHTML = surveyHtml(1);
                     break;
                 case 'meal':
                      document.getElementById('mealTimer-mirror').textContent = state.timer || '5:00';
