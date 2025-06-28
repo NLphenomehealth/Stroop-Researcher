@@ -14,19 +14,15 @@
              font-weight: 900;
              letter-spacing: 0.1em;
         }
-        #progressBar-mirror {
-            transition: width 1.5s linear;
-        }
     </style>
 </head>
 <body class="bg-gray-800 flex items-center justify-center min-h-screen p-4">
 
-    <!-- This container will be replaced by an error message if needed -->
     <div id="main-content" class="w-full">
         <div id="app-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl max-w-5xl w-full text-center relative transition-all duration-500 mx-auto">
             
             <!-- Session Input Screen -->
-            <div id="sessionInput" class="screen">
+            <div id="sessionInput" class="screen-mirror">
                 <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Researcher Mirror</h1>
                 <p class="text-gray-600 mb-6">Enter the 6-character Session ID provided by the participant.</p>
                 <div class="flex justify-center items-center gap-4">
@@ -36,11 +32,50 @@
                 <p id="error-message" class="text-red-500 mt-4 font-semibold"></p>
             </div>
 
-            <!-- Mirror View (all screens will be rendered here) -->
+            <!-- Mirror View Container -->
             <div id="mirror-view" class="hidden">
-                <!-- This content will be dynamically generated to mirror the participant -->
-            </div>
+                 <div id="session-id-display" class="absolute bottom-4 left-4 bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg"></div>
 
+                <!-- Welcome Screen Mirror -->
+                <div id="welcome-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h1 class="text-4xl sm:text-5xl font-extrabold text-gray-800 mb-4">Color Response Test</h1><p class="text-gray-600 mb-8 text-lg">Participant is at the welcome screen.</p><div class="p-4 bg-indigo-50 rounded-lg text-indigo-700">Waiting for participant to start...</div></div></div>
+
+                <!-- Survey Screens Mirror -->
+                <div id="preBaselineSurvey-mirror" class="screen-mirror hidden"></div>
+                <div id="preMealSurvey-mirror" class="screen-mirror hidden"></div>
+
+                <!-- Baseline Screen Mirror -->
+                <div id="baseline-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-4">Resting Baseline</h2><p class="text-gray-600 mb-6">Participant is in the 3-minute resting period.</p><div class="text-6xl font-mono font-bold my-4 text-gray-800" id="baselineTimer-mirror">3:00</div></div></div>
+                
+                <!-- Instructions Screen Mirror -->
+                <div id="instructions-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-6">Instructions</h2><p class="text-gray-600">Participant is viewing the instructions.</p></div></div>
+
+                <!-- Practice Screen Mirror -->
+                <div id="practice-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2><div class="instructions text-gray-600 mb-4 mx-auto min-h-[10rem] flex items-center justify-center"><div class="p-4" id="practiceInstruction-mirror"></div></div><div id="practiceElements-mirror"><div class="stroop-word text-6xl my-4" id="practiceWord-mirror"></div><div class="text-2xl font-bold h-10 my-4" id="practiceFeedback-mirror"></div></div><div id="practiceStatus-mirror"></div></div></div>
+
+                <!-- Color Test Screen Mirror -->
+                <div id="colorTest-mirror" class="screen-mirror hidden">
+                    <div class="max-w-4xl mx-auto">
+                        <h2 id="blockTitle-mirror" class="text-3xl font-bold text-gray-800"></h2>
+                        <div id="colorTimer-mirror" class="text-5xl font-mono font-bold my-2 text-gray-700"></div>
+                        <div id="colorWord-mirror" class="stroop-word text-7xl my-8"></div>
+                        <div class="w-full max-w-md mx-auto bg-gray-200 rounded-full h-4 mt-2 mb-6">
+                            <div id="progressBar-mirror" class="bg-indigo-600 h-4 rounded-full"></div>
+                        </div>
+                        <div class="flex justify-center space-x-2 sm:space-x-4 my-6 opacity-50"><button class="response-button" style="border-color: red; color: red;">R</button><button class="response-button" style="border-color: green; color: green;">G</button><button class="response-button" style="border-color: blue; color: blue;">B</button><button class="response-button" style="border-color: #FFBF00; color: #FFBF00;">Y</button></div>
+                        <div id="feedback-mirror" class="text-4xl font-bold h-12"></div>
+                    </div>
+                    <div class="absolute bottom-0 right-0 text-red-500 text-xl font-bold">Wrong: <span id="wrong-mirror">0</span></div>
+                </div>
+
+                <!-- Block Complete Screen Mirror -->
+                <div id="blockComplete-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 id="blockCompleteTitle-mirror" class="text-4xl font-extrabold text-gray-800 mb-6"></h2><div class="flex flex-col sm:flex-row justify-around items-center gap-6"><div class="border-4 border-red-400 bg-red-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg"><p class="text-red-600 font-bold text-xl uppercase mb-2">❌ Participant's Score ❌</p><p>Correct: <span id="blockCorrect-mirror" class="font-bold text-green-600"></span> | Wrong: <span id="blockWrong-mirror" class="font-bold text-red-600"></span></p><p class="text-2xl mt-2 font-bold">Accuracy: <span id="blockAccuracy-mirror" class="text-red-600"></span>%</p></div><div class="border-4 border-green-400 bg-green-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg"><p class="text-green-600 font-bold text-xl uppercase mb-2">🏆 Competitor Score 🏆</p><p>Correct: <span id="competitorCorrect-mirror" class="font-bold text-green-600"></span> | Wrong: <span id="competitorWrong-mirror" class="font-bold text-red-600"></span></p><p class="text-2xl mt-2 font-bold">Accuracy: <span id="competitorAccuracy-mirror" class="text-green-600"></span>%</p></div></div></div></div>
+
+                <!-- Meal Screen Mirror -->
+                <div id="meal-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-4">Meal Time</h2><p class="text-gray-600 mx-auto mb-6">Participant is in the 5-minute meal break.</p><div id="mealTimer-mirror" class="text-6xl font-mono font-bold my-4 text-gray-800"></div></div></div>
+
+                <!-- Complete Screen Mirror -->
+                <div id="complete-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h1 class="text-5xl font-extrabold text-green-600 mb-4">Protocol Complete</h1><p class="text-gray-700 text-lg">The participant has finished the test.</p></div></div>
+            </div>
         </div>
     </div>
 
@@ -51,19 +86,13 @@
         import { getFirestore, doc, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
         
         let db, auth;
-        let unsubscribe = null; // To store the listener cleanup function
+        let unsubscribe = null; 
+        let animationFrameId = null;
+        let currentWordForAnimation = null;
+        let lastRenderedScreen = null;
 
         window.onload = function() {
-            // Your web app's Firebase configuration
-            const firebaseConfig = {
-                apiKey: "AIzaSyAY-vUFdaTXQR9-B9tPFeQNgUd2CHdEBJ8",
-                authDomain: "stroop-comp.firebaseapp.com",
-                projectId: "stroop-comp",
-                storageBucket: "stroop-comp.firebasestorage.app",
-                messagingSenderId: "832246150640",
-                appId: "1:832246150640:web:e35225f1dd629fa9335935"
-            };
-            
+            const firebaseConfig = { apiKey: "AIzaSyAY-vUFdaTXQR9-B9tPFeQNgUd2CHdEBJ8", authDomain: "stroop-comp.firebaseapp.com", projectId: "stroop-comp", storageBucket: "stroop-comp.firebasestorage.app", messagingSenderId: "832246150640", appId: "1:832246150640:web:e35225f1dd629fa9335935" };
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -72,10 +101,7 @@
                 signIn();
             } catch (e) {
                 console.error("Firebase initialization failed:", e);
-                 document.getElementById('main-content').innerHTML = `
-                    <div class="bg-white p-8 rounded-lg shadow-xl">
-                        <h1 class="text-2xl font-bold text-red-600">Error: Could not connect to the server.</h1>
-                    </div>`;
+                document.getElementById('main-content').innerHTML = `<div class="bg-white p-8 rounded-lg shadow-xl"><h1 class="text-2xl font-bold text-red-600">Error: Could not connect to the server.</h1></div>`;
             }
         };
 
@@ -84,26 +110,6 @@
                 await signInAnonymously(auth);
             } catch (error) {
                 console.error("Authentication Error", error);
-                let errorMessage = `<h1>Authentication Failed</h1><p>${error.message}</p>`;
-
-                if (error.code === 'auth/operation-not-allowed') {
-                    errorMessage = `
-                        <div class="text-left max-w-3xl mx-auto bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
-                            <h1 class="text-2xl font-extrabold text-red-700 mb-4">Action Required: Enable Anonymous Sign-In</h1>
-                            <p class="text-lg text-gray-800 mb-4">This app needs permission to connect to the database. This is a one-time setup step in your Firebase project.</p>
-                            <p class="font-bold text-gray-900 mb-2">Please follow these steps to fix this:</p>
-                            <ol class="list-decimal list-inside space-y-2 text-gray-700">
-                                <li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-blue-600 underline font-semibold">Firebase Console</a> and select your project (<strong>stroop-comp</strong>).</li>
-                                <li>In the left menu, click <strong>Build > Authentication</strong>.</li>
-                                <li>On the Authentication page, click the <strong>Sign-in method</strong> tab.</li>
-                                <li>Find <strong>Anonymous</strong> in the list of sign-in providers and click on it.</li>
-                                <li>Click the <strong>Enable</strong> toggle switch, then click <strong>Save</strong>.</li>
-                                <li>Once you've saved, come back here and <strong>refresh this page</strong>. The app will then work correctly.</li>
-                            </ol>
-                        </div>
-                    `;
-                }
-                document.getElementById('main-content').innerHTML = `<div class="p-4">${errorMessage}</div>`;
             }
         }
         
@@ -111,26 +117,19 @@
             const sessionId = document.getElementById('sessionIdField').value.trim().toUpperCase();
             const errorEl = document.getElementById('error-message');
             const appId = "stroop-comp"; 
-            
-            if (sessionId.length !== 6) {
-                errorEl.textContent = 'Please enter a valid 6-character Session ID.';
-                return;
-            }
+            if (sessionId.length !== 6) { errorEl.textContent = 'Please enter a valid 6-character Session ID.'; return; }
             errorEl.textContent = '';
-            
             if (unsubscribe) unsubscribe();
-
             const sessionRef = doc(db, `artifacts/${appId}/public/data/sessions`, sessionId);
-            
             unsubscribe = onSnapshot(sessionRef, (doc) => {
                 if (doc.exists()) {
-                    document.getElementById('sessionInput').classList.add('hidden');
-                    document.getElementById('mirror-view').classList.remove('hidden');
+                    document.getElementById('sessionInput').style.display = 'none';
+                    document.getElementById('mirror-view').style.display = 'block';
                     renderState(doc.data());
                 } else {
                     errorEl.textContent = `Session "${sessionId}" not found. Please check the ID.`;
-                    document.getElementById('sessionInput').classList.remove('hidden');
-                    document.getElementById('mirror-view').classList.add('hidden');
+                    document.getElementById('sessionInput').style.display = 'block';
+                    document.getElementById('mirror-view').style.display = 'none';
                 }
             }, (error) => {
                 console.error("Snapshot error:", error);
@@ -139,167 +138,117 @@
         }
         
         function renderState(state) {
-            const mirrorView = document.getElementById('mirror-view');
-            let htmlContent = `<div class="absolute bottom-4 left-4 bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg">Mirroring Session: <span class="font-bold">${state.sessionId || ''}</span></div>`;
-            const surveyHtml = `
-                <div class="max-w-4xl mx-auto text-left space-y-4">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Participant is Logging Stress Level</h2>
-                    <p>Instructions shown to participant:</p>
-                    <div class="bg-gray-100 p-4 rounded-lg border border-gray-300">
-                        <p>Please open the <strong>MyT1Diabetes</strong> app and open the <strong>I’ve Noticed</strong> feature.</p>
-                        <p>Select ‘Write a note’, tap the text box and enter: <code class="bg-gray-200 text-red-600 p-1 rounded">Stress 0=[your response to the survey below]</code>. After you’ve entered your response, please select ‘Confirm’.</p>
-                        <div class="my-4">
-                            <p class="font-bold">What is your current stress level?</p>
-                            <ul class="list-none space-y-1 mt-2">
-                               <li>○ 😰 Very stressed</li>
-                               <li>○ 😨 Stressed</li>
-                               <li>○ 😥 Somewhat stressed</li>
-                               <li>○ 😶 Neutral</li>
-                               <li>○ 😌 Not stressed at all</li>
-                               <li>○ ⚪️ No answer</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <p class="text-center font-semibold text-indigo-600 mt-4">Waiting for participant to click "Next"...</p>
-                 </div>
-            `;
+            document.getElementById('session-id-display').innerHTML = `Mirroring Session: <span class="font-bold">${state.sessionId || ''}</span>`;
+
+            if (state.screenId !== lastRenderedScreen) {
+                document.querySelectorAll('.screen-mirror').forEach(el => el.classList.add('hidden'));
+                const currentScreenEl = document.getElementById(`${state.screenId}-mirror`);
+                if (currentScreenEl) {
+                    currentScreenEl.classList.remove('hidden');
+                }
+                lastRenderedScreen = state.screenId;
+            }
+
+            const surveyHtml = `<div class="max-w-4xl mx-auto text-left space-y-4"><h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Participant is Logging Stress Level</h2><p>Instructions shown to participant:</p><div class="bg-gray-100 p-4 rounded-lg border border-gray-300"><p>Please open the <strong>MyT1Diabetes</strong> app and open the <strong>I’ve Noticed</strong> feature.</p><p>Select ‘Write a note’, tap the text box and enter: <code class="bg-gray-200 text-red-600 p-1 rounded">Stress 0=[your response to the survey below]</code>. After you’ve entered your response, please select ‘Confirm’.</p><div class="my-4"><p class="font-bold">What is your current stress level?</p><ul class="list-none space-y-1 mt-2"><li>○ 😰 Very stressed</li><li>○ 😨 Stressed</li><li>○ 😥 Somewhat stressed</li><li>○ 😶 Neutral</li><li>○ 😌 Not stressed at all</li><li>○ ⚪️ No answer</li></ul></div></div><p class="text-center font-semibold text-indigo-600 mt-4">Waiting for participant to click "Next"...</p></div>`;
 
             switch(state.screenId) {
-                case 'welcome':
-                    htmlContent += `<div class="max-w-4xl mx-auto"><h1 class="text-4xl sm:text-5xl font-extrabold text-gray-800 mb-4">Color Response Test</h1><p class="text-gray-600 mb-8 text-lg">Participant is at the welcome screen.</p><div class="p-4 bg-indigo-50 rounded-lg text-indigo-700">Waiting for participant to start...</div></div>`;
-                    break;
                 case 'preBaselineSurvey':
-                    htmlContent += surveyHtml;
+                    document.getElementById('preBaselineSurvey-mirror').innerHTML = surveyHtml;
                     break;
                 case 'baseline':
-                    htmlContent += `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-4">Resting Baseline</h2><p class="text-gray-600 mb-6">Participant is in the 3-minute resting period.</p><div class="text-6xl font-mono font-bold my-4 text-gray-800">${state.timer || '3:00'}</div></div>`;
+                    document.getElementById('baselineTimer-mirror').textContent = state.timer || '3:00';
                     break;
-
-                case 'instructions':
-                    htmlContent += `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-6">Instructions</h2><p class="text-gray-600">Participant is viewing the instructions.</p></div>`;
-                    break;
-
                 case 'practice':
-                     if (state.practice && state.practice.instruction) {
-                        const practice = state.practice;
-                        const instruction = practice.instruction;
-                        const word = practice.word || '';
-                        const color = practice.color || 'transparent'; 
-                        const feedback = practice.feedback || '';
-                        const isComplete = practice.isComplete || false;
-                        
-                        let practiceElementsHtml = '';
-                        if (!isComplete && !practice.isVisualExample) {
-                            practiceElementsHtml = `
-                                <div id="practiceElements">
-                                    <div class="stroop-word text-6xl my-4" style="color:${color};">${word}</div>
-                                    <div class="text-2xl font-bold h-10 my-4 ${feedback === 'Correct' ? 'text-green-500' : 'text-red-500'}">${feedback}</div>
-                                </div>
-                            `;
-                        } else if (isComplete) {
-                            practiceElementsHtml = `<p class="font-bold text-indigo-600">Waiting for participant to start the test...</p>`;
+                    if (state.practice) {
+                        const { instruction, word, color, feedback, isComplete, isVisualExample } = state.practice;
+                        document.getElementById('practiceInstruction-mirror').innerHTML = instruction || 'Loading...';
+                        const practiceElements = document.getElementById('practiceElements-mirror');
+                        const practiceStatus = document.getElementById('practiceStatus-mirror');
+                        practiceElements.style.display = (!isComplete && !isVisualExample) ? 'block' : 'none';
+                        practiceStatus.style.display = (isComplete || isVisualExample) ? 'block' : 'none';
+
+                        if (!isComplete && !isVisualExample) {
+                             document.getElementById('practiceWord-mirror').textContent = word;
+                             document.getElementById('practiceWord-mirror').style.color = color;
+                             const feedbackEl = document.getElementById('practiceFeedback-mirror');
+                             feedbackEl.textContent = feedback;
+                             feedbackEl.className = `text-2xl font-bold h-10 my-4 ${feedback === 'Correct' ? 'text-green-500' : 'text-red-500'}`;
+                        } else if(isComplete) {
+                            practiceStatus.innerHTML = `<p class="font-bold text-indigo-600">Waiting for participant to start the test...</p>`;
+                        } else if (isVisualExample) {
+                            practiceStatus.innerHTML = `<p class="font-bold text-gray-500 mt-4">Waiting for participant to click "Next"...</p>`;
                         }
-
-
-                        htmlContent += `
-                             <div class="max-w-4xl mx-auto">
-                                 <h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2>
-                                 <div class="instructions text-gray-600 mb-4 mx-auto min-h-[10rem] flex items-center justify-center"><div class="p-4">${instruction}</div></div>
-                                 ${practiceElementsHtml}
-                                 ${(practice.nextButtonOnly && !isComplete) ? '<p class="font-bold text-gray-500 mt-4">Waiting for participant to click "Next"...</p>' : ''}
-                             </div>
-                         `;
-                     } else {
-                        htmlContent += `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2><p class="text-gray-600">Participant is loading practice session...</p></div>`;
-                     }
+                    }
                     break;
-
                 case 'colorTest':
                     if(state.block) {
                         const { block } = state;
-                        const progressBarHtml = block.showProgressBar 
-                            ? `<div class="w-full max-w-md mx-auto bg-gray-200 rounded-full h-4 mt-2 mb-6"><div id="progressBar-mirror" class="bg-indigo-600 h-4 rounded-full" style="width: 0%;"></div></div>`
-                            : `<div class="h-10"></div>`; 
+                        document.getElementById('blockTitle-mirror').textContent = `Color Response - Block ${block.num}`;
+                        document.getElementById('colorTimer-mirror').textContent = state.timer || '3:00';
+                        const wordEl = document.getElementById('colorWord-mirror');
+                        wordEl.textContent = block.word;
+                        wordEl.style.color = block.color;
+                        const feedbackEl = document.getElementById('feedback-mirror');
+                        feedbackEl.textContent = block.feedback || '';
+                        feedbackEl.className = `text-4xl font-bold h-12 ${block.feedback === 'CORRECT' ? 'text-green-500' : 'text-red-500'}`;
+                        document.getElementById('wrong-mirror').textContent = block.wrongCount || 0;
 
-                        htmlContent += `
-                            <div class="max-w-4xl mx-auto">
-                                <h2 class="text-3xl font-bold text-gray-800">Color Response - Block ${block.num}</h2>
-                                <div class="text-5xl font-mono font-bold my-2 text-gray-700">${state.timer || '3:00'}</div>
-                                <div class="stroop-word text-7xl my-8" style="color: ${block.color};">${block.word}</div>
-                                ${progressBarHtml}
-                                <div class="flex justify-center space-x-2 sm:space-x-4 my-6 opacity-50">
-                                    <button class="response-button" style="border-color: red; color: red;">R</button>
-                                    <button class="response-button" style="border-color: green; color: green;">G</button>
-                                    <button class="response-button" style="border-color: blue; color: blue;">B</button>
-                                    <button class="response-button" style="border-color: #FFBF00; color: #FFBF00;">Y</button>
-                                </div>
-                                <div class="text-4xl font-bold h-12 ${block.feedback === 'CORRECT' ? 'text-green-500' : 'text-red-500'}">${block.feedback || ''}</div>
-                            </div>
-                            <div class="absolute bottom-0 right-0 text-red-500 text-xl font-bold">Wrong: <span>${block.wrongCount || 0}</span></div>
-                        `;
-
-                        if(block.showProgressBar) {
-                            setTimeout(() => {
-                                const bar = document.getElementById('progressBar-mirror');
-                                if(bar) bar.style.width = '100%';
-                            }, 50);
+                        if (block.showProgressBar && block.word !== currentWordForAnimation) {
+                            currentWordForAnimation = block.word;
+                            startProgressBarAnimation();
                         }
                     }
                     break;
-                
                 case 'blockComplete':
                     if(state.blockComplete) {
-                        const results = state.blockComplete;
-                        htmlContent += `
-                            <div class="max-w-4xl mx-auto">
-                                <h2 class="text-4xl font-extrabold text-gray-800 mb-6">Block ${state.currentBlock - 1} Complete</h2>
-                                <div class="flex flex-col sm:flex-row justify-around items-center gap-6">
-                                    <div class="border-4 border-red-400 bg-red-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
-                                        <p class="text-red-600 font-bold text-xl uppercase mb-2">❌ Participant's Score ❌</p>
-                                        <p>Correct: <span class="font-bold text-green-600">${results.user.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.user.wrong}</span></p>
-                                        <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-red-600">${results.user.accuracy}</span>%</p>
-                                    </div>
-                                    <div class="border-4 border-green-400 bg-green-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
-                                        <p class="text-green-600 font-bold text-xl uppercase mb-2">🏆 Competitor Score 🏆</p>
-                                        <p>Correct: <span class="font-bold text-green-600">${results.competitor.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.competitor.wrong}</span></p>
-                                        <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-green-600">${results.competitor.accuracy}</span>%</p>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
+                        const { user, competitor } = state.blockComplete;
+                        document.getElementById('blockCompleteTitle-mirror').textContent = `Block ${state.currentBlock - 1} Complete`;
+                        document.getElementById('blockCorrect-mirror').textContent = user.correct;
+                        document.getElementById('blockWrong-mirror').textContent = user.wrong;
+                        document.getElementById('blockAccuracy-mirror').textContent = user.accuracy;
+                        document.getElementById('competitorCorrect-mirror').textContent = competitor.correct;
+                        document.getElementById('competitorWrong-mirror').textContent = competitor.wrong;
+                        document.getElementById('competitorAccuracy-mirror').textContent = competitor.accuracy;
                     }
                     break;
-                
                 case 'preMealSurvey':
-                    htmlContent += surveyHtml;
+                    document.getElementById('preMealSurvey-mirror').innerHTML = surveyHtml;
                     break;
-                
                 case 'meal':
-                     htmlContent += `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-4">Meal Time</h2><p class="text-gray-600 mx-auto mb-6">Participant is in the 5-minute meal break.</p><div class="text-6xl font-mono font-bold my-4 text-gray-800">${state.timer || '5:00'}</div></div>`;
+                     document.getElementById('mealTimer-mirror').textContent = state.timer || '5:00';
                     break;
-                
-                case 'complete':
-                     htmlContent += `<div class="max-w-4xl mx-auto"><h1 class="text-5xl font-extrabold text-green-600 mb-4">Protocol Complete</h1><p class="text-gray-700 text-lg">The participant has finished the test.</p></div>`;
-                    break;
-                    
-                default:
-                    htmlContent += '<p>Waiting for participant data...</p>';
             }
-            mirrorView.innerHTML = htmlContent;
+             if (state.screenId !== 'colorTest') {
+                currentWordForAnimation = null;
+                cancelAnimationFrame(animationFrameId);
+            }
+        }
+
+        function startProgressBarAnimation() {
+            cancelAnimationFrame(animationFrameId);
+            const bar = document.getElementById('progressBar-mirror');
+            if (!bar) return;
+
+            let startTime = null;
+            const duration = 1500; 
+
+            function frame(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const width = 100 - (progress * 100);
+                bar.style.transition = 'none';
+                bar.style.width = width + '%';
+                
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(frame);
+                }
+            }
+            animationFrameId = requestAnimationFrame(frame);
         }
 
         const styleSheet = document.createElement("style");
-        styleSheet.innerText = `
-            .button { transition: background-color 0.2s, transform 0.2s; }
-            .hidden { display: none; }
-            .response-button {
-                font-family: 'Inter', sans-serif; font-weight: 900;
-                font-size: 2.25rem; 
-                border: 2px solid; 
-                background-color: white; width: 80px; height: 80px; border-radius: 50%;
-                display: flex; align-items: center; justify-content: center;
-            }
-        `;
+        styleSheet.innerText = `.button { transition: background-color 0.2s, transform 0.2s; } .hidden { display: none; } .response-button {font-family: 'Inter', sans-serif; font-weight: 900; font-size: 2.25rem; border: 2px solid; background-color: white; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}`;
         document.head.appendChild(styleSheet);
     </script>
 </body>
