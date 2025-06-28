@@ -140,7 +140,7 @@
         
         function renderState(state) {
             const mirrorView = document.getElementById('mirror-view');
-            let htmlContent = `<div class="absolute bottom-4 left-4 bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg">Mirroring Session: <span class="font-bold">${state.sessionId}</span></div>`;
+            let htmlContent = `<div class="absolute bottom-4 left-4 bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg">Mirroring Session: <span class="font-bold">${state.sessionId || ''}</span></div>`;
             const surveyHtml = `
                 <div class="max-w-4xl mx-auto text-left space-y-4">
                     <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Participant is Logging Stress Level</h2>
@@ -180,16 +180,37 @@
                     break;
 
                 case 'practice':
-                     if(state.practice) {
+                     if (state.practice && state.practice.instruction) {
+                        const practice = state.practice;
+                        const instruction = practice.instruction;
+                        const word = practice.word || '';
+                        const color = practice.color || 'transparent'; 
+                        const feedback = practice.feedback || '';
+                        const isComplete = practice.isComplete || false;
+                        
+                        let practiceElementsHtml = '';
+                        if (!isComplete && !practice.isVisualExample) {
+                            practiceElementsHtml = `
+                                <div id="practiceElements">
+                                    <div class="stroop-word text-6xl my-4" style="color:${color};">${word}</div>
+                                    <div class="text-2xl font-bold h-10 my-4 ${feedback === 'Correct' ? 'text-green-500' : 'text-red-500'}">${feedback}</div>
+                                </div>
+                            `;
+                        } else if (isComplete) {
+                            practiceElementsHtml = `<p class="font-bold text-indigo-600">Waiting for participant to start the test...</p>`;
+                        }
+
+
                         htmlContent += `
-                            <div class="max-w-4xl mx-auto">
-                                <h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2>
-                                <div class="instructions text-gray-600 mb-4 mx-auto min-h-[6rem] flex items-center justify-center"><div class="p-4">${state.practice.instruction}</div></div>
-                                ${state.practice.isComplete ? '' : `<div class="stroop-word text-6xl my-4" style="color:${state.practice.color};">${state.practice.word}</div>`}
-                                <div class="text-2xl font-bold h-10 my-4 ${state.practice.feedback === 'Correct' ? 'text-green-500' : 'text-red-500'}">${state.practice.feedback || ''}</div>
-                                ${state.practice.isComplete ? '<p class="font-bold text-indigo-600">Waiting for participant to start the test...</p>' : ''}
-                            </div>
-                        `;
+                             <div class="max-w-4xl mx-auto">
+                                 <h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2>
+                                 <div class="instructions text-gray-600 mb-4 mx-auto min-h-[10rem] flex items-center justify-center"><div class="p-4">${instruction}</div></div>
+                                 ${practiceElementsHtml}
+                                 ${(practice.nextButtonOnly && !isComplete) ? '<p class="font-bold text-gray-500 mt-4">Waiting for participant to click "Next"...</p>' : ''}
+                             </div>
+                         `;
+                     } else {
+                        htmlContent += `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2><p class="text-gray-600">Participant is loading practice session...</p></div>`;
                      }
                     break;
 
@@ -214,7 +235,7 @@
                                 </div>
                                 <div class="text-4xl font-bold h-12 ${block.feedback === 'CORRECT' ? 'text-green-500' : 'text-red-500'}">${block.feedback || ''}</div>
                             </div>
-                            <div class="absolute bottom-0 right-0 text-red-500 text-xl font-bold">Wrong: <span>${block.wrongCount}</span></div>
+                            <div class="absolute bottom-0 right-0 text-red-500 text-xl font-bold">Wrong: <span>${block.wrongCount || 0}</span></div>
                         `;
 
                         if(block.showProgressBar) {
@@ -254,7 +275,7 @@
                     break;
                 
                 case 'meal':
-                     htmlContent += `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-4">Meal Time</h2><p class="text-gray-600 mx-auto mb-6">Participant is in the 3-minute meal break.</p><div class="text-6xl font-mono font-bold my-4 text-gray-800">${state.timer || '3:00'}</div></div>`;
+                     htmlContent += `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-4">Meal Time</h2><p class="text-gray-600 mx-auto mb-6">Participant is in the 5-minute meal break.</p><div class="text-6xl font-mono font-bold my-4 text-gray-800">${state.timer || '5:00'}</div></div>`;
                     break;
                 
                 case 'complete':
