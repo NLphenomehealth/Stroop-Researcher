@@ -14,13 +14,16 @@
              font-weight: 900;
              letter-spacing: 0.1em;
         }
+        #progressBar-mirror {
+            transition: width 1.5s linear;
+        }
     </style>
 </head>
 <body class="bg-gray-800 flex items-center justify-center min-h-screen p-4">
 
     <!-- This container will be replaced by an error message if needed -->
     <div id="main-content" class="w-full">
-        <div id="app-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl max-w-4xl w-full text-center relative transition-all duration-500 mx-auto">
+        <div id="app-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl max-w-5xl w-full text-center relative transition-all duration-500 mx-auto">
             
             <!-- Session Input Screen -->
             <div id="sessionInput" class="screen">
@@ -83,8 +86,7 @@
                 console.error("Authentication Error", error);
                 let errorMessage = `<h1>Authentication Failed</h1><p>${error.message}</p>`;
 
-                // Check for the specific error and provide helpful instructions.
-                if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
+                if (error.code === 'auth/operation-not-allowed') {
                     errorMessage = `
                         <div class="text-left max-w-3xl mx-auto bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
                             <h1 class="text-2xl font-extrabold text-red-700 mb-4">Action Required: Enable Anonymous Sign-In</h1>
@@ -108,7 +110,7 @@
         window.connectToSession = () => {
             const sessionId = document.getElementById('sessionIdField').value.trim().toUpperCase();
             const errorEl = document.getElementById('error-message');
-            const appId = "stroop-comp"; // Hardcode project ID
+            const appId = "stroop-comp"; 
             
             if (sessionId.length !== 6) {
                 errorEl.textContent = 'Please enter a valid 6-character Session ID.';
@@ -116,20 +118,15 @@
             }
             errorEl.textContent = '';
             
-            if (unsubscribe) {
-                unsubscribe();
-            }
+            if (unsubscribe) unsubscribe();
 
             const sessionRef = doc(db, `artifacts/${appId}/public/data/sessions`, sessionId);
             
             unsubscribe = onSnapshot(sessionRef, (doc) => {
                 if (doc.exists()) {
                     document.getElementById('sessionInput').classList.add('hidden');
-                    const mirrorView = document.getElementById('mirror-view');
-                    mirrorView.classList.remove('hidden');
-                    
-                    const state = doc.data();
-                    renderState(state);
+                    document.getElementById('mirror-view').classList.remove('hidden');
+                    renderState(doc.data());
                 } else {
                     errorEl.textContent = `Session "${sessionId}" not found. Please check the ID.`;
                     document.getElementById('sessionInput').classList.remove('hidden');
@@ -143,53 +140,89 @@
         
         function renderState(state) {
             const mirrorView = document.getElementById('mirror-view');
-            let htmlContent = `<div class="absolute top-4 left-4 bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg">Mirroring Session: <span class="font-bold">${state.sessionId}</span></div>`;
+            let htmlContent = `<div class="absolute bottom-4 left-4 bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg">Mirroring Session: <span class="font-bold">${state.sessionId}</span></div>`;
+            const surveyHtml = `
+                <div class="max-w-4xl mx-auto text-left space-y-4">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Participant is Logging Stress Level</h2>
+                    <p>Instructions shown to participant:</p>
+                    <div class="bg-gray-100 p-4 rounded-lg border border-gray-300">
+                        <p>Please open the <strong>MyT1Diabetes</strong> app and open the <strong>I’ve Noticed</strong> feature.</p>
+                        <p>Select ‘Write a note’, tap the text box and enter: <code class="bg-gray-200 text-red-600 p-1 rounded">Stress 0=[your response to the survey below]</code>. After you’ve entered your response, please select ‘Confirm’.</p>
+                        <div class="my-4">
+                            <p class="font-bold">What is your current stress level?</p>
+                            <ul class="list-none space-y-1 mt-2">
+                               <li>○ 😰 Very stressed</li>
+                               <li>○ 😨 Stressed</li>
+                               <li>○ 😥 Somewhat stressed</li>
+                               <li>○ 😶 Neutral</li>
+                               <li>○ 😌 Not stressed at all</li>
+                               <li>○ ⚪️ No answer</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="text-center font-semibold text-indigo-600 mt-4">Waiting for participant to click "Next"...</p>
+                 </div>
+            `;
 
             switch(state.screenId) {
                 case 'welcome':
-                    htmlContent += `
-                        <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-800 mb-4">Color Response Test</h1>
-                        <p class="text-gray-600 mb-8 text-lg">Participant is at the welcome screen.</p>
-                        <div class="p-4 bg-indigo-50 rounded-lg text-indigo-700">Waiting for participant to start...</div>
-                    `;
+                    htmlContent += `<div class="max-w-4xl mx-auto"><h1 class="text-4xl sm:text-5xl font-extrabold text-gray-800 mb-4">Color Response Test</h1><p class="text-gray-600 mb-8 text-lg">Participant is at the welcome screen.</p><div class="p-4 bg-indigo-50 rounded-lg text-indigo-700">Waiting for participant to start...</div></div>`;
                     break;
-                
+                case 'preBaselineSurvey':
+                    htmlContent += surveyHtml;
+                    break;
                 case 'baseline':
-                    htmlContent += `
-                        <h2 class="text-3xl font-bold text-gray-800 mb-4">Resting Baseline</h2>
-                        <p class="text-gray-600 mb-6">Participant is in the 5-minute resting period.</p>
-                        <div class="text-6xl font-mono font-bold my-4 text-gray-800">${state.timer || '5:00'}</div>
-                    `;
+                    htmlContent += `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-4">Resting Baseline</h2><p class="text-gray-600 mb-6">Participant is in the 3-minute resting period.</p><div class="text-6xl font-mono font-bold my-4 text-gray-800">${state.timer || '3:00'}</div></div>`;
                     break;
 
                 case 'instructions':
-                    htmlContent += `
-                        <h2 class="text-3xl font-bold text-gray-800 mb-6">Instructions</h2>
-                        <p class="text-gray-600">Participant is viewing the instructions.</p>
-                    `;
+                    htmlContent += `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-6">Instructions</h2><p class="text-gray-600">Participant is viewing the instructions.</p></div>`;
                     break;
 
                 case 'practice':
                      if(state.practice) {
                         htmlContent += `
-                            <h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2>
-                            <div class="text-gray-600 mb-4 max-w-xl mx-auto">${state.practice.instruction}</div>
-                            <div class="stroop-word text-8xl my-8" style="color:${state.practice.color};">${state.practice.word}</div>
-                            <div class="text-4xl font-bold h-12 my-4 ${state.practice.feedback === 'Correct!' ? 'text-green-500' : 'text-red-500'}">${state.practice.feedback || ''}</div>
+                            <div class="max-w-4xl mx-auto">
+                                <h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2>
+                                <div class="instructions text-gray-600 mb-4 mx-auto min-h-[6rem] flex items-center justify-center"><div class="p-4">${state.practice.instruction}</div></div>
+                                ${state.practice.isComplete ? '' : `<div class="stroop-word text-6xl my-4" style="color:${state.practice.color};">${state.practice.word}</div>`}
+                                <div class="text-2xl font-bold h-10 my-4 ${state.practice.feedback === 'Correct' ? 'text-green-500' : 'text-red-500'}">${state.practice.feedback || ''}</div>
+                                ${state.practice.isComplete ? '<p class="font-bold text-indigo-600">Waiting for participant to start the test...</p>' : ''}
+                            </div>
                         `;
                      }
                     break;
 
                 case 'colorTest':
                     if(state.block) {
+                        const { block } = state;
+                        const progressBarHtml = block.showProgressBar 
+                            ? `<div class="w-full max-w-md mx-auto bg-gray-200 rounded-full h-4 mt-2 mb-6"><div id="progressBar-mirror" class="bg-indigo-600 h-4 rounded-full" style="width: 0%;"></div></div>`
+                            : `<div class="h-10"></div>`; 
+
                         htmlContent += `
-                            <div class="absolute bottom-4 left-4 font-bold py-2 px-5 rounded-full text-white text-lg shadow-lg ${state.block.status.class}">${state.block.status.text}</div>
-                            <h2 class="text-3xl font-bold text-gray-800">Color Response - Block ${state.block.num}</h2>
-                            <div class="text-5xl font-mono font-bold my-2 text-gray-700">${state.timer}</div>
-                            <div class="stroop-word text-9xl my-8" style="color: ${state.block.color};">${state.block.word}</div>
-                            <div class="text-4xl font-bold h-12 ${state.block.feedback === 'CORRECT' ? 'text-green-500' : 'text-red-500'}">${state.block.feedback || ''}</div>
-                            <div class="absolute bottom-4 right-4 text-red-500 text-xl font-bold">Wrong: <span>${state.block.wrongCount}</span></div>
+                            <div class="max-w-4xl mx-auto">
+                                <h2 class="text-3xl font-bold text-gray-800">Color Response - Block ${block.num}</h2>
+                                <div class="text-5xl font-mono font-bold my-2 text-gray-700">${state.timer || '3:00'}</div>
+                                <div class="stroop-word text-7xl my-8" style="color: ${block.color};">${block.word}</div>
+                                ${progressBarHtml}
+                                <div class="flex justify-center space-x-2 sm:space-x-4 my-6 opacity-50">
+                                    <button class="response-button" style="border-color: red; color: red;">R</button>
+                                    <button class="response-button" style="border-color: green; color: green;">G</button>
+                                    <button class="response-button" style="border-color: blue; color: blue;">B</button>
+                                    <button class="response-button" style="border-color: #FFBF00; color: #FFBF00;">Y</button>
+                                </div>
+                                <div class="text-4xl font-bold h-12 ${block.feedback === 'CORRECT' ? 'text-green-500' : 'text-red-500'}">${block.feedback || ''}</div>
+                            </div>
+                            <div class="absolute bottom-0 right-0 text-red-500 text-xl font-bold">Wrong: <span>${block.wrongCount}</span></div>
                         `;
+
+                        if(block.showProgressBar) {
+                            setTimeout(() => {
+                                const bar = document.getElementById('progressBar-mirror');
+                                if(bar) bar.style.width = '100%';
+                            }, 50);
+                        }
                     }
                     break;
                 
@@ -197,36 +230,35 @@
                     if(state.blockComplete) {
                         const results = state.blockComplete;
                         htmlContent += `
-                            <h2 class="text-4xl font-extrabold text-gray-800 mb-6">Block ${state.currentBlock-1} Complete</h2>
-                             <div class="flex flex-col sm:flex-row justify-around items-center gap-6">
-                                <div class="border-4 border-red-400 bg-red-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
-                                    <p class="text-red-600 font-bold text-xl uppercase mb-2">❌ Participant's Score ❌</p>
-                                    <p>Correct: <span class="font-bold text-green-600">${results.user.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.user.wrong}</span></p>
-                                    <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-red-600">${results.user.accuracy}</span>%</p>
-                                </div>
-                                <div class="border-4 border-green-400 bg-green-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
-                                    <p class="text-green-600 font-bold text-xl uppercase mb-2">🏆 Competitor Score 🏆</p>
-                                    <p>Correct: <span class="font-bold text-green-600">${results.competitor.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.competitor.wrong}</span></p>
-                                    <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-green-600">${results.competitor.accuracy}</span>%</p>
+                            <div class="max-w-4xl mx-auto">
+                                <h2 class="text-4xl font-extrabold text-gray-800 mb-6">Block ${state.currentBlock - 1} Complete</h2>
+                                <div class="flex flex-col sm:flex-row justify-around items-center gap-6">
+                                    <div class="border-4 border-red-400 bg-red-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
+                                        <p class="text-red-600 font-bold text-xl uppercase mb-2">❌ Participant's Score ❌</p>
+                                        <p>Correct: <span class="font-bold text-green-600">${results.user.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.user.wrong}</span></p>
+                                        <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-red-600">${results.user.accuracy}</span>%</p>
+                                    </div>
+                                    <div class="border-4 border-green-400 bg-green-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg">
+                                        <p class="text-green-600 font-bold text-xl uppercase mb-2">🏆 Competitor Score 🏆</p>
+                                        <p>Correct: <span class="font-bold text-green-600">${results.competitor.correct}</span> | Wrong: <span class="font-bold text-red-600">${results.competitor.wrong}</span></p>
+                                        <p class="text-2xl mt-2 font-bold">Accuracy: <span class="text-green-600">${results.competitor.accuracy}</span>%</p>
+                                    </div>
                                 </div>
                             </div>
                         `;
                     }
                     break;
                 
+                case 'preMealSurvey':
+                    htmlContent += surveyHtml;
+                    break;
+                
                 case 'meal':
-                     htmlContent += `
-                        <h2 class="text-3xl font-bold text-gray-800 mb-4">Meal Time</h2>
-                        <p class="text-gray-600 max-w-md mx-auto mb-6">Participant is in the 5-minute meal break.</p>
-                        <div class="text-6xl font-mono font-bold my-4 text-gray-800">${state.timer || '5:00'}</div>
-                    `;
+                     htmlContent += `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-4">Meal Time</h2><p class="text-gray-600 mx-auto mb-6">Participant is in the 3-minute meal break.</p><div class="text-6xl font-mono font-bold my-4 text-gray-800">${state.timer || '3:00'}</div></div>`;
                     break;
                 
                 case 'complete':
-                     htmlContent += `
-                        <h1 class="text-5xl font-extrabold text-green-600 mb-4">Protocol Complete</h1>
-                        <p class="text-gray-700 text-lg">The participant has finished the test.</p>
-                    `;
+                     htmlContent += `<div class="max-w-4xl mx-auto"><h1 class="text-5xl font-extrabold text-green-600 mb-4">Protocol Complete</h1><p class="text-gray-700 text-lg">The participant has finished the test.</p></div>`;
                     break;
                     
                 default:
@@ -235,6 +267,19 @@
             mirrorView.innerHTML = htmlContent;
         }
 
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            .button { transition: background-color 0.2s, transform 0.2s; }
+            .hidden { display: none; }
+            .response-button {
+                font-family: 'Inter', sans-serif; font-weight: 900;
+                font-size: 2.25rem; 
+                border: 2px solid; 
+                background-color: white; width: 80px; height: 80px; border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+            }
+        `;
+        document.head.appendChild(styleSheet);
     </script>
 </body>
 </html>
