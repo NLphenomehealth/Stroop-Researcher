@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Researcher Mirror</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .stroop-word {
+             font-weight: 900;
+             letter-spacing: 0.1em;
+        }
+        #progressBar-mirror {
+            transition: width 1.5s linear;
+        }
+    </style>
+</head>
+<body class="bg-gray-800 flex items-center justify-center min-h-screen p-4">
+
+    <!-- This container will be replaced by an error message if needed -->
+    <div id="main-content" class="w-full">
+        <div id="app-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl max-w-5xl w-full text-center relative transition-all duration-500 mx-auto">
+            
+            <!-- Session Input Screen -->
+            <div id="sessionInput" class="screen-mirror">
+                <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Stroop Researcher Mirror</h1>
+                <p class="text-gray-600 mb-6">Enter the 6-character Session ID provided by the participant.</p>
+                <div class="flex justify-center items-center gap-4">
+                    <input type="text" id="sessionIdField" maxlength="6" class="form-input text-center text-2xl font-mono uppercase w-48 px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    <button id="connectBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg shadow-lg transform hover:scale-105 transition-transform" onclick="connectToSession()">Connect</button>
+                </div>
+                <p id="error-message" class="text-red-500 mt-4 font-semibold"></p>
+            </div>
+
+            <!-- Mirror View Container -->
+            <div id="mirror-view" class="hidden">
+                 <div id="session-id-display" class="absolute bottom-4 left-4 bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg"></div>
+
+                <!-- Welcome Screen Mirror -->
+                <div id="welcome-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h1 class="text-4xl sm:text-5xl font-extrabold text-gray-800 mb-4">Color Response Test</h1><p class="text-gray-600 mb-8 text-lg">Participant is at the welcome screen.</p><div class="p-4 bg-indigo-50 rounded-lg text-indigo-700">Waiting for participant to start...</div></div></div>
+
+                <!-- Survey Screens Mirror -->
+                <div id="preBaselineSurvey-mirror" class="screen-mirror hidden"></div>
+                <div id="preMealSurvey-mirror" class="screen-mirror hidden"></div>
+
+                <!-- Baseline Screen Mirror -->
+                <div id="baseline-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-4">Resting Baseline</h2><p class="text-gray-600 mb-6">Participant is in the 3-minute resting period.</p><div class="text-6xl font-mono font-bold my-4 text-gray-800" id="baselineTimer-mirror">3:00</div></div></div>
+                
+                <!-- Instructions Screen Mirror -->
+                <div id="instructions-mirror" class="screen-mirror hidden"></div>
+
+                <!-- Practice Screen Mirror -->
+                <div id="practice-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-2">Practice Session</h2><div class="instructions text-gray-600 mb-4 mx-auto min-h-[10rem] flex items-center justify-center p-4"><div id="practiceInstruction-mirror"></div></div><div id="practiceElements-mirror"><div class="stroop-word text-6xl my-4" id="practiceWord-mirror"></div><div class="text-2xl font-bold h-10 my-4" id="practiceFeedback-mirror"></div></div><div id="practiceStatus-mirror"></div></div></div>
+
+                <!-- Color Test Screen Mirror -->
+                <div id="colorTest-mirror" class="screen-mirror hidden">
+                    <div class="max-w-4xl mx-auto">
+                        <h2 id="blockTitle-mirror" class="text-3xl font-bold text-gray-800"></h2>
+                        <div id="colorTimer-mirror" class="text-5xl font-mono font-bold my-2 text-gray-700"></div>
+                        <div id="colorWord-mirror" class="stroop-word text-7xl my-8"></div>
+                        <div class="w-full max-w-md mx-auto bg-gray-200 rounded-full h-4 mt-2 mb-6"><div id="progressBar-mirror" class="bg-indigo-600 h-4 rounded-full"></div></div>
+                        <div class="flex justify-center space-x-2 sm:space-x-4 my-6 opacity-50"><button class="response-button" style="border-color: red; color: red;">R</button><button class="response-button" style="border-color: green; color: green;">G</button><button class="response-button" style="border-color: blue; color: blue;">B</button><button class="response-button" style="border-color: #FFBF00; color: #FFBF00;">Y</button></div>
+                        <div id="feedback-mirror" class="text-4xl font-bold h-12"></div>
+                    </div>
+                    <div class="absolute bottom-0 right-0 text-red-500 text-xl font-bold">Wrong: <span id="wrong-mirror">0</span></div>
+                </div>
+
+                <!-- Block Complete Screen Mirror -->
+                <div id="blockComplete-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 id="blockCompleteTitle-mirror" class="text-4xl font-extrabold text-gray-800 mb-6"></h2><div class="flex flex-col sm:flex-row justify-around items-center gap-6"><div class="border-4 border-red-400 bg-red-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg"><p class="text-red-600 font-bold text-xl uppercase mb-2">❌ Participant's Score ❌</p><p>Correct: <span id="blockCorrect-mirror" class="font-bold text-green-600"></span> | Wrong: <span id="blockWrong-mirror" class="font-bold text-red-600"></span></p><p class="text-2xl mt-2 font-bold">Accuracy: <span id="blockAccuracy-mirror" class="text-red-600"></span>%</p></div><div class="border-4 border-green-400 bg-green-50 p-6 rounded-2xl w-full sm:w-auto shadow-lg"><p class="text-green-600 font-bold text-xl uppercase mb-2">🏆 Competitor Score 🏆</p><p>Correct: <span id="competitorCorrect-mirror" class="font-bold text-green-600"></span> | Wrong: <span id="competitorWrong-mirror" class="font-bold text-red-600"></span></p><p class="text-2xl mt-2 font-bold">Accuracy: <span id="competitorAccuracy-mirror" class="text-green-600"></span>%</p></div></div></div></div>
+
+                <!-- Meal Screen Mirror -->
+                <div id="meal-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-4">Meal Time</h2><p class="text-gray-600 mx-auto mb-6">Participant is in the 5-minute meal break.</p><div id="mealTimer-mirror" class="text-6xl font-mono font-bold my-4 text-gray-800"></div></div></div>
+
+                <!-- Complete Screen Mirror -->
+                <div id="complete-mirror" class="screen-mirror hidden"><div class="max-w-4xl mx-auto"><h1 class="text-5xl font-extrabold text-green-600 mb-4">Protocol Complete</h1><p class="text-gray-700 text-lg">The participant has finished the test.</p></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+        
+        let db, auth;
+        let unsubscribe = null; 
+        let animationFrameId = null;
+        let currentWordForAnimation = null;
+        let lastRenderedScreen = null;
+
+        window.onload = function() {
+            const firebaseConfig = { apiKey: "AIzaSyAY-vUFdaTXQR9-B9tPFeQNgUd2CHdEBJ8", authDomain: "stroop-comp.firebaseapp.com", projectId: "stroop-comp", storageBucket: "stroop-comp.firebasestorage.app", messagingSenderId: "832246150640", appId: "1:832246150640:web:e35225f1dd629fa9335935" };
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('error');
+                signIn();
+            } catch (e) {
+                console.error("Firebase initialization failed:", e);
+                document.getElementById('main-content').innerHTML = `<div class="bg-white p-8 rounded-lg shadow-xl"><h1 class="text-2xl font-bold text-red-600">Error: Could not connect to the server.</h1></div>`;
+            }
+        };
+
+        async function signIn() {
+             try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Authentication Error", error);
+            }
+        }
+        
+        window.connectToSession = () => {
+            const sessionId = document.getElementById('sessionIdField').value.trim().toUpperCase();
+            const errorEl = document.getElementById('error-message');
+            const appId = "stroop-comp"; 
+            if (sessionId.length !== 6) { errorEl.textContent = 'Please enter a valid 6-character Session ID.'; return; }
+            errorEl.textContent = '';
+            if (unsubscribe) unsubscribe();
+            const sessionRef = doc(db, `artifacts/${appId}/public/data/sessions`, sessionId);
+            unsubscribe = onSnapshot(sessionRef, (doc) => {
+                if (doc.exists()) {
+                    document.getElementById('sessionInput').style.display = 'none';
+                    document.getElementById('mirror-view').style.display = 'block';
+                    renderState(doc.data());
+                } else {
+                    errorEl.textContent = `Session "${sessionId}" not found. Please check the ID.`;
+                    document.getElementById('sessionInput').style.display = 'block';
+                    document.getElementById('mirror-view').style.display = 'none';
+                }
+            }, (error) => {
+                console.error("Snapshot error:", error);
+                errorEl.textContent = "Error connecting to the session.";
+            });
+        }
+        
+        function renderState(state) {
+            document.getElementById('session-id-display').innerHTML = `Mirroring Session: <span class="font-bold">${state.sessionId || ''}</span>`;
+
+            if (state.screenId !== lastRenderedScreen) {
+                document.querySelectorAll('.screen-mirror').forEach(el => el.classList.add('hidden'));
+                const currentScreenEl = document.getElementById(`${state.screenId}-mirror`);
+                if (currentScreenEl) {
+                    currentScreenEl.classList.remove('hidden');
+                }
+                lastRenderedScreen = state.screenId;
+            }
+
+            const surveyHtml = (stressId) => `<div class="max-w-4xl mx-auto text-left space-y-4"><h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Participant is Logging Stress Level</h2><p>Instructions shown to participant:</p><div class="bg-gray-100 p-4 rounded-lg border border-gray-300"><p>Please open the <strong>MyT1Diabetes</strong> app and open the <strong>I’ve Noticed</strong> feature.</p><p>Select ‘Write a note’, tap the text box and enter: <code class="bg-gray-200 text-red-600 p-1 rounded">Stress ${stressId}=[your response to the survey below]</code>. After you’ve entered your response, please select ‘Confirm’.</p><div class="my-4"><p class="font-bold">What is your current stress level?</p><ul class="list-none space-y-1 mt-2"><li>○ 😰 Very stressed</li><li>○ 😨 Stressed</li><li>○ 😥 Somewhat stressed</li><li>○ 😶 Neutral</li><li>○ 😌 Not stressed at all</li><li>○ ⚪️ No answer</li></ul></div></div><p class="text-center font-semibold text-indigo-600 mt-4">Waiting for participant to click "Next"...</p></div>`;
+
+            switch(state.screenId) {
+                case 'preBaselineSurvey':
+                    document.getElementById('preBaselineSurvey-mirror').innerHTML = surveyHtml(0);
+                    break;
+                case 'baseline':
+                    document.getElementById('baselineTimer-mirror').textContent = state.timer || '3:00';
+                    break;
+                case 'instructions':
+                     document.getElementById('instructions-mirror').innerHTML = `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-6">Color Response Instructions</h2><div class="text-left mx-auto text-gray-700 space-y-4"><p class="font-bold">Important: Respond to the <em>color</em> of the text, not the actual word.</p><p>You have two ways to respond:</p><ul class="list-disc list-inside ml-4 space-y-2"><li><strong>Use your keyboard:</strong><ul class="list-none list-inside ml-6 font-semibold"><li>Press <strong class="text-red-600">R</strong> for Red</li><li>Press <strong class="text-green-600">G</strong> for Green</li><li>Press <strong class="text-blue-600">B</strong> for Blue</li><li>Press <strong class="text-yellow-500">Y</strong> for Yellow</li></ul></li><li><strong>Click the on-screen buttons:</strong> Use your mouse to click the buttons below the word.<div class="flex justify-start space-x-2 my-2 pl-6"><div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg" style="border: 2px solid black; color: black;">R</div><div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg" style="border: 2px solid black; color: black;">G</div><div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg" style="border: 2px solid black; color: black;">B</div><div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg" style="border: 2px solid black; color: black;">Y</div></div></li></ul><p><strong>Examples:</strong></p><div class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-1"><div>If you see <span style="color:red; font-weight: bold;">GREEN</span> → Press “R” for Red.</div><div>If you see <span style="color:blue; font-weight: bold;">RED</span> → Press “B” for Blue.</div></div><p>Focus on the color of the text, not what the word says.</p></div><p class="text-center font-semibold text-indigo-600 mt-4">Waiting for participant to start practice...</p></div>`;
+                    break;
+                case 'practice':
+                     if (state.practice && state.practice.instruction) {
+                        const practice = state.practice;
+                        document.getElementById('practiceInstruction-mirror').innerHTML = practice.instruction;
+                        const practiceElements = document.getElementById('practiceElements-mirror');
+                        const practiceStatus = document.getElementById('practiceStatus-mirror');
+                        practiceElements.style.display = (!practice.isComplete && !practice.isVisualExample) ? 'block' : 'none';
+                        practiceStatus.style.display = (practice.isComplete || practice.isVisualExample) ? 'block' : 'none';
+
+                        if (!practice.isComplete && !practice.isVisualExample) {
+                             document.getElementById('practiceWord-mirror').textContent = practice.word;
+                             document.getElementById('practiceWord-mirror').style.color = practice.color;
+                             const feedbackEl = document.getElementById('practiceFeedback-mirror');
+                             feedbackEl.textContent = practice.feedback;
+                             feedbackEl.className = `text-2xl font-bold h-10 my-4 ${practice.feedback === 'Correct' ? 'text-green-500' : 'text-red-500'}`;
+                        } else if(practice.isComplete) {
+                            practiceStatus.innerHTML = `<p class="font-bold text-indigo-600">Waiting for participant to start the test...</p>`;
+                        } else if (practice.isVisualExample) {
+                             practiceStatus.innerHTML = `<p class="font-bold text-gray-500 mt-4">Waiting for participant to click "Next"...</p>`;
+                        }
+                     }
+                    break;
+                case 'colorTest':
+                    if(state.block) {
+                        const { block } = state;
+                        document.getElementById('blockTitle-mirror').textContent = `Color Response - Block ${block.num}`;
+                        document.getElementById('colorTimer-mirror').textContent = state.timer || '3:00';
+                        const wordEl = document.getElementById('colorWord-mirror');
+                        wordEl.textContent = block.word;
+                        wordEl.style.color = block.color;
+                        const feedbackEl = document.getElementById('feedback-mirror');
+                        feedbackEl.textContent = block.feedback || '';
+                        feedbackEl.className = `text-4xl font-bold h-12 ${block.feedback === 'CORRECT' ? 'text-green-500' : 'text-red-500'}`;
+                        document.getElementById('wrong-mirror').textContent = block.wrongCount || 0;
+
+                        if (block.showProgressBar && block.word !== currentWordForAnimation) {
+                            currentWordForAnimation = block.word;
+                            startProgressBarAnimation();
+                        }
+                    }
+                    break;
+                case 'blockComplete':
+                    if(state.blockComplete) {
+                        const { user, competitor } = state.blockComplete;
+                        document.getElementById('blockCompleteTitle-mirror').textContent = `Block ${state.currentBlock - 1} Complete`;
+                        document.getElementById('blockCorrect-mirror').textContent = user.correct;
+                        document.getElementById('blockWrong-mirror').textContent = user.wrong;
+                        document.getElementById('blockAccuracy-mirror').textContent = user.accuracy;
+                        document.getElementById('competitorCorrect-mirror').textContent = competitor.correct;
+                        document.getElementById('competitorWrong-mirror').textContent = competitor.wrong;
+                        document.getElementById('competitorAccuracy-mirror').textContent = competitor.accuracy;
+                    }
+                    break;
+                case 'preMealSurvey':
+                    document.getElementById('preMealSurvey-mirror').innerHTML = surveyHtml(1);
+                    break;
+                case 'meal':
+                     document.getElementById('mealTimer-mirror').textContent = state.timer || '5:00';
+                    break;
+            }
+             if (state.screenId !== 'colorTest') {
+                currentWordForAnimation = null;
+                cancelAnimationFrame(animationFrameId);
+            }
+        }
+
+        function startProgressBarAnimation() {
+            cancelAnimationFrame(animationFrameId);
+            const bar = document.getElementById('progressBar-mirror');
+            if (!bar) return;
+
+            let startTime = null;
+            const duration = 1500; 
+
+            function frame(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const width = 100 - (progress * 100);
+                bar.style.transition = 'none';
+                bar.style.width = width + '%';
+                
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(frame);
+                }
+            }
+            animationFrameId = requestAnimationFrame(frame);
+        }
+
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `.button { transition: background-color 0.2s, transform 0.2s; } .hidden { display: none; } .response-button {font-family: 'Inter', sans-serif; font-weight: 900; font-size: 2.25rem; border: 2px solid; background-color: white; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center;}`;
+        document.head.appendChild(styleSheet);
+    </script>
+</body>
+</html>
